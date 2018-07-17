@@ -1,0 +1,11 @@
+{
+  "name": "sidecc-server",
+  "version": "1.0.0",
+  "description": "aplicação server para declaração de captação de água fluvial",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "sergio.orugian",
+  "license": "ISC"
+}
