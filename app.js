@@ -1,26 +1,24 @@
-var express = require("express");
-var app = express();
-var foreignAgent = require("./foreign-agent.js")
-
-app.get("/", function(req, res) {
-    // res.send("Hello World!");
-    // console.log("foreignAgent", foreignAgent);
-    login().then(response => {
-        if (response.ERROR != null) {
-            res.send("Erro de autenticação");
-        } else {
-            res.send("Usuário autenticado");
-        }
-    });
-});
+// var express = require("express");
+// var app = express();
+var app = require("express")();
+var security = require("./security.js");
 
 app.listen(3000, function() {
-    console.log("Example app listening on port 3000!");
+    console.log("...");
 });
 
-function login() {
-    return foreignAgent.login("08010341000150", "109047").then(response => {
-        foreignAgent.getList();
-        return response;
-    });
-}
+app.get("/", function(req, res) {
+    // send index html page
+    // load current user 
+});
+
+app.get("/login", function(req, res) {
+
+    const loginResponse = security.login();
+    if (loginResponse == null) {
+        res.send("Erro de autenticação");
+        return;
+    }
+    res.send("Usuário autenticado");
+
+});

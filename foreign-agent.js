@@ -1,9 +1,22 @@
+/**
+ * Every interaction with sidecc server is exposed here
+ * 
+ * get html page
+ * post action
+ * 
+ */
+
+
 var querystring = require('querystring');
 var http = require('http');
 
-// TODO:
-//      Salvar o cookie para requisições futuras
-//      Retornar a tela que o login foi efetuado com sucesso
+var jsdom = require("jsdom");
+const { JSDOM } = jsdom;
+const JSDOM2 = jsdom.JSDOM;
+
+console.log("jsdom", jsdom);
+console.log("{ JSDOM }", { JSDOM });
+console.log("{ JSDOM2 }", { JSDOM2 });
 
 let session_cookie;
 
@@ -15,7 +28,7 @@ function setCookie(res) {
         requestCookies = requestCookies + cookie[i].split(';')[0]+';';
     }
     session_cookie = requestCookies;
-    console.log("cookie", session_cookie);
+    console.log("cookie: ", session_cookie);
 }
 
 function getCookie() {
@@ -61,7 +74,50 @@ function send(options, data) {
     });
 }
 
+function getPage(options) {
+
+    return new Promise((resolve, reject) => {
+
+        const req = http.request(options, (res) => {
+            console.log(`STATUS 2: ${res.statusCode}`);
+            console.log(`HEADERS 2: ${JSON.stringify(res.headers)}`);
+
+            // let body = [];
+            let data = "";
+
+            // res.setEncoding('utf8');
+            res.setEncoding('binary');
+
+            res.on('data', (chunk) => {
+                // body.push(chunk);
+                // console.log(`BODY 2: ${chunk}`);
+                data += chunk;
+            });
+
+            // var tags = [];
+            // var tagsCount = {};
+            // var tagsWithCount = [];
+
+            res.on('end', (chunk) => {
+                console.log('No more data in response.');
+                console.log("data", data);
+                const page = new JSDOM(data);
+                console.log("first button: ", page.window.document.querySelectorAll("button")[0].getAttribute("onclick"));
+                // resolve(body);
+            });
+        });
+
+        req.on('error', (e) => {
+            console.error(`problem with request: ${e.message}`);
+            reject(e);
+        });
+
+        req.end();
+    });
+}
+
 const service = {
+
     login: (username, password) => {
 
         const postData = querystring.stringify({
@@ -89,13 +145,13 @@ const service = {
             return {};
         });
     }
-    // /sidecc/usos/usosLista.php
-    , getList: () => {
-        console.log("getList", getCookie());
+
+    , get: (pPath) => {
+
         const options = {
             hostname: 'www.daeebmt.sp.gov.br',
             port: 80,
-            path: '/sidecc/usos/usosLista.php',
+            path: pPath,
             method: 'GET',
             headers: {
                 'Cookie': getCookie()
@@ -104,36 +160,21 @@ const service = {
             }
         }
 
-        const req = http.request(options, (res) => {
-            console.log(`STATUS 2: ${res.statusCode}`);
-            console.log(`HEADERS 2: ${JSON.stringify(res.headers)}`);
-            let body = [];
+        return getPage(options).then(function(response) {
+            // console.log("selUso", response[0].search('selUso'));
 
-            // res.setEncoding('utf8');
-            res.setEncoding('binary');
+            console.log("getPage: ", response);
 
-            res.on('data', (chunk) => {
-                body.push(chunk);
-                console.log(`BODY: ${chunk}`);
-            });
+            // let parser = new DOMParser();
+            // let htmlDocument = parser.parseFromString(response[0]);
 
-            res.on('end', () => {
-                console.log('No more data in response.');
-                // try {
-                //     body = JSON.parse(Buffer.concat(body).toString());
-                // } catch(e) {
-                //     reject(e);
-                // }
-                // resolve(body);
-            });
+            // console.log(htmlDocument.querySelector("input[onclick=selUso]"));
+
+            // console.log("selUso", response[0].sea);
+            return response;
         });
 
-        req.on('error', (e) => {
-            console.error(`problem with request: ${e.message}`);
-            reject(e);
-        });
-        // write data to request body
-        req.end();
+        // return sendGetRequest(options);
     }
 }
 
